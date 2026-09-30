@@ -12,7 +12,8 @@ export const brand = {
     "Axrok delivers offensive security, managed defense and cyber threat intelligence for organizations that cannot afford a breach.", // brief
   location: "Headquartered in Pakistan, serving clients globally.", // brief phrasing
   city: "Peshawar, Pakistan",
-  siteUrl: "https://axrok.com", // [PLACEHOLDER] production domain
+  // [PLACEHOLDER] production domain. Preview deploys (GitHub Pages) override it via NEXT_PUBLIC_SITE_URL.
+  siteUrl: (process.env.NEXT_PUBLIC_SITE_URL || "https://axrok.com").replace(/\/$/, ""),
 } as const;
 
 export type ServiceKey = "pentest" | "soc" | "grc" | "cti" | "pqc";

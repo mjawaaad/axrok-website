@@ -1,6 +1,9 @@
 import type { MetadataRoute } from "next";
 import { brand, nav } from "@/content/site";
 
+// Generated at build time; required for the static export used by GitHub Pages.
+export const dynamic = "force-static";
+
 export default function sitemap(): MetadataRoute.Sitemap {
   return nav.map((item) => ({
     url: `${brand.siteUrl}${item.href === "/" ? "" : item.href}`,

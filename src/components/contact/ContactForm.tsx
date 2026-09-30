@@ -24,6 +24,14 @@ const label = "text-[0.72rem] font-medium tracking-[0.16em] text-ink-muted upper
 
 type Status = "idle" | "submitting" | "success" | "error";
 
+/**
+ * Where enquiries go. Server builds use the /api/contact handler. Static builds (GitHub Pages)
+ * have no server, so they need NEXT_PUBLIC_CONTACT_ENDPOINT, e.g. a hosted form service URL.
+ * [PLACEHOLDER] set it in the Pages workflow once a provider is chosen.
+ */
+const CONTACT_ENDPOINT =
+  process.env.NEXT_PUBLIC_CONTACT_ENDPOINT || (process.env.NEXT_PUBLIC_STATIC_EXPORT ? null : "/api/contact");
+
 /** Reads ?service= and ?tier= so CTAs elsewhere can pre-fill the form. */
 function Prefill({ setValue }: { setValue: UseFormSetValue<ContactInput> }) {
   const params = useSearchParams();
@@ -65,9 +73,14 @@ export function ContactForm() {
     setStatus("submitting");
     setServerError(null);
     try {
-      const res = await fetch("/api/contact", {
+      if (!CONTACT_ENDPOINT) {
+        throw new Error(
+          "This preview is not connected to email yet, so enquiries cannot be sent from it. Please try again on the live site."
+        );
+      }
+      const res = await fetch(CONTACT_ENDPOINT, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(data),
       });
       const json = (await res.json().catch(() => ({}))) as {
@@ -75,7 +88,8 @@ export function ContactForm() {
         error?: string;
         fields?: Partial<Record<keyof ContactInput, string[]>>;
       };
-      if (!res.ok || !json.ok) {
+      // Our handler returns { ok }; hosted form services may only signal success via status.
+      if (!res.ok || json.ok === false) {
         for (const [name, msgs] of Object.entries(json.fields ?? {})) {
           if (msgs?.[0]) setError(name as keyof ContactInput, { message: msgs[0] });
         }

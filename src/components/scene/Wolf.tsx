@@ -7,7 +7,8 @@ import * as THREE from "three";
 import { useApp } from "@/lib/app-store";
 import { scrollPose } from "@/lib/scene-state";
 
-export const WOLF_URL = "/models/amarok.glb";
+// Raw public-folder URL, so it needs the base path when hosted under a subpath (GitHub Pages).
+export const WOLF_URL = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/models/amarok.glb`;
 
 /** Procedural brushed-metal grain: horizontal streaks used as a roughness map. */
 function makeBrushedTexture() {

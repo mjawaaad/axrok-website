@@ -38,6 +38,11 @@ The only form on the site, at `/contact`. Service CTAs link to `/contact?service
 
 `POST /api/contact` validates with the same zod schema as the form, drops honeypot submissions silently and rate-limits by IP. **Delivery is a placeholder:** copy `.env.example` to `.env.local` and set `RESEND_API_KEY`, `CONTACT_TO_EMAIL` and `CONTACT_FROM_EMAIL` to send through Resend. Without them, enquiries are logged to the server console. To use a different provider, replace `deliver()` in `src/app/api/contact/route.ts`.
 
+## Deployment
+
+- **GitHub Pages (preview):** every push to `main` runs `.github/workflows/nextjs.yml`, which builds a static export (`GITHUB_PAGES=true` switches `next.config.ts` to `output: "export"` with the Pages base path) and publishes it to https://mjawaaad.github.io/axrok-website/. Pages is static-only, so the workflow removes `/api/contact`; the form posts to the repository variable `NEXT_PUBLIC_CONTACT_ENDPOINT` (for example a hosted form service URL) if set, and otherwise tells visitors the preview cannot send enquiries.
+- **Production (recommended):** a Node host such as Vercel runs the normal build, including `/api/contact` and optimized images. No config changes needed; set the email variables from `.env.example`.
+
 ## Placeholders to replace before launch
 
 Search the repo for `[PLACEHOLDER]`. All copy lives in `src/content/site.ts`. Items that make factual claims also show the tag on the page:

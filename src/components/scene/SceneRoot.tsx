@@ -104,10 +104,15 @@ export function SceneRoot() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [reduced, quality, pathname]);
 
-  // Dolly in once the intro hands over.
+  // Dolly in once the intro hands over. usePathname (not window.location) so a base path
+  // such as GitHub Pages' /axrok-website does not hide the route.
+  const pathRef = useRef(pathname);
+  useEffect(() => {
+    pathRef.current = pathname;
+  }, [pathname]);
   useEffect(() => {
     if (!introDone || stillMode()) return;
-    const target = ROUTE_POSES[routeKeyFor(window.location.pathname)];
+    const target = ROUTE_POSES[routeKeyFor(pathRef.current)];
     gsap.to(pose, { camZ: target.camZ, duration: reduced ? 0 : 2.6, ease: "expo.out" });
   }, [introDone, reduced]);
 
