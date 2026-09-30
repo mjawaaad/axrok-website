@@ -1,0 +1,9 @@
+﻿import { ogContentType, ogSize, renderOg } from "@/lib/og";
+
+export const alt = "Axrok: the Amarok wolf mark beside the tagline Precision Offense. Absolute Defense.";
+export const size = ogSize;
+export const contentType = ogContentType;
+
+export default function Image() {
+  return renderOg({ eyebrow: "Offensive security", title: "Precision Offense. Absolute Defense." });
+}

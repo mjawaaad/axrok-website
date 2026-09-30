@@ -1,0 +1,288 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Axrok palette. Void navy and cobalt carry the brand; everything else is a tint of them.
+  Contrast on --navy (#0B0139):
+    cobalt       #1E3AFF  2.9:1  fills, 3D, decoration only (fails AA for text and UI outlines)
+    cobalt-lift  #5B70FF  4.8:1  outlines, focus rings, small accent marks
+    periwinkle   #A3B1FF  9.4:1  accent text
+    ink          #F4F5FF 18.6:1  body and headings
+    ink-muted    #B9BEE6 10.7:1  secondary text
+    ink-dim      #8A8FC0  6.3:1  tertiary labels
+    ember        #FF5B2E  6.3:1  hot accent, interactive hover only
+*/
+@theme inline {
+  --color-navy: #0b0139;
+  --color-navy-raised: #120a4a;
+  --color-navy-deep: #06001f;
+  --color-cobalt: #1e3aff;
+  --color-cobalt-lift: #5b70ff;
+  --color-periwinkle: #a3b1ff;
+  --color-ink: #f4f5ff;
+  --color-ink-muted: #b9bee6;
+  --color-ink-dim: #8a8fc0;
+  --color-ember: #ff5b2e;
+  --color-line: rgb(163 177 255 / 0.16);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-archivo);
+  --font-heading: var(--font-archivo);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+
+  --ease-expo-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-expo-in-out: cubic-bezier(0.87, 0, 0.13, 1);
+
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes marquee-vertical {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+}
+
+/* The site is dark by design; shadcn tokens map straight onto the brand palette. */
+:root {
+  color-scheme: dark;
+  --background: #0b0139;
+  --foreground: #f4f5ff;
+  --card: #120a4a;
+  --card-foreground: #f4f5ff;
+  --popover: #0f0643;
+  --popover-foreground: #f4f5ff;
+  --primary: #1e3aff;
+  --primary-foreground: #f4f5ff;
+  --secondary: #120a4a;
+  --secondary-foreground: #f4f5ff;
+  --muted: #120a4a;
+  --muted-foreground: #b9bee6;
+  --accent: #1a1260;
+  --accent-foreground: #f4f5ff;
+  --destructive: #ff8a7a;
+  --border: rgb(163 177 255 / 0.16);
+  --input: rgb(163 177 255 / 0.28);
+  --ring: #5b70ff;
+  --radius: 0.375rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    background: var(--color-navy);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-navy text-ink;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  ::selection {
+    background: var(--color-cobalt);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-cobalt-lift);
+    outline-offset: 3px;
+  }
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+@layer components {
+  /* Eyebrow label: mono, tracked, small. Used for section indices, not terminal styling. */
+  .eyebrow {
+    @apply font-mono text-[0.7rem] tracking-[0.28em] text-periwinkle uppercase;
+  }
+  .display {
+    @apply font-display font-semibold tracking-[-0.02em] text-ink;
+    font-stretch: 112%;
+  }
+  .hairline {
+    background: linear-gradient(90deg, transparent, var(--color-line) 12%, var(--color-line) 88%, transparent);
+    height: 1px;
+  }
+}
+
+/* Intro overlay: hidden on repeat visits (set by a head script before first paint). */
+html[data-intro="skip"] #intro {
+  display: none;
+}
+/*
+  Intro assembly runs in pure CSS so it starts at first paint, before any JavaScript.
+  JavaScript only drives the live percentage and the exit (see Preloader).
+*/
+@property --intro-p {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+@keyframes intro-shard {
+  from {
+    transform: translate(var(--tx), var(--ty)) rotate(var(--r)) scale(0.86);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes intro-draw {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  70% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes intro-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes intro-rise {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes intro-count {
+  to {
+    --intro-p: 72;
+  }
+}
+@keyframes intro-bar {
+  to {
+    transform: scaleX(0.72);
+  }
+}
+.intro-shard {
+  transform-box: view-box;
+  animation: intro-shard 0.95s var(--ease-expo-out) both;
+}
+.intro-outline {
+  stroke-dasharray: 1;
+  animation: intro-draw 1.3s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+.intro-solid {
+  animation: intro-fade-in 0.45s ease-out 1.35s both;
+}
+.intro-letter {
+  display: inline-block;
+  animation: intro-rise 1s var(--ease-expo-out) both;
+}
+.intro-counter::before {
+  counter-reset: p var(--intro-p);
+  content: "0" counter(p, decimal-leading-zero);
+  animation: intro-count 1.7s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+.intro-counter[data-live]::before {
+  content: none;
+  animation: none;
+}
+.intro-bar {
+  animation: intro-bar 1.7s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+.intro-bar[data-live] {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-shard,
+  .intro-letter {
+    animation: none;
+  }
+  .intro-outline {
+    animation: none;
+    opacity: 0;
+  }
+  .intro-solid {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* Still-render mode: only the scene is visible. */
+html[data-still] header,
+html[data-still] main,
+html[data-still] footer,
+html[data-still] nextjs-portal {
+  visibility: hidden;
+}
+
+/* Split-text lines clip their words while they rise into place. */
+.split-line {
+  overflow: clip;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
