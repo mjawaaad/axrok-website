@@ -4,7 +4,6 @@ import { Wordmark } from "@/components/brand/Mark";
 import { ShardMark } from "@/components/brand/ShardMark";
 import { SplitHeading } from "@/components/motion/SplitHeading";
 import { RevealGroup } from "@/components/motion/Reveal";
-import { ScenePath, type SceneOffset } from "@/components/motion/ScenePath";
 import { about, brand, differentiators, team } from "@/content/site";
 import { pageMeta } from "@/lib/metadata";
 
@@ -15,15 +14,6 @@ export const metadata: Metadata = pageMeta({
   path: "/about",
 });
 
-// The wolf holds the left column, poised; content reads on the right.
-const ABOUT_PATH: Record<string, SceneOffset> = {
-  intro: {},
-  principles: { rotY: 0.12, dim: 0.1 },
-  story: { rotY: 0.45, wolfY: -0.1, dim: 0.2 },
-  team: { rotY: 0.25, camZ: 0.6, dim: 0.25 },
-  partners: { rotY: 0.2, dim: 0.2 },
-  close: { rotY: 0.05, camZ: 0.2, dim: 0 },
-};
 
 const col = "lg:col-span-6 lg:col-start-7";
 
@@ -165,8 +155,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-
-      <ScenePath path={ABOUT_PATH} />
     </>
   );
 }

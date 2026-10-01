@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo, Geist, Geist_Mono } from "next/font/google";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
-import { SceneRoot } from "@/components/scene/SceneRoot";
+import { ClientInit } from "@/components/site/ClientInit";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { Preloader } from "@/components/loader/Preloader";
 import { introHeadScript } from "@/lib/intro";
@@ -56,11 +56,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
-        <SceneRoot />
+        <ClientInit />
         <SmoothScroll />
         <Preloader />
         <Header />
-        <main id="main" className="relative z-10">
+        <main id="main" className="relative">
           {children}
         </main>
         <Footer />

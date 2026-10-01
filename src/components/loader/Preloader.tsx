@@ -48,12 +48,14 @@ export function Preloader() {
 
       let fontsReady = false;
       document.fonts?.ready.then(() => (fontsReady = true));
+      // Only Home carries heavy assets (the wolf story); every other page is ready once fonts are.
+      const onHome = /^\/?$/.test(window.location.pathname.replace(process.env.NEXT_PUBLIC_BASE_PATH ?? "", ""));
       const target = () => {
         const s = useApp.getState();
         let p = fontsReady ? 0.12 : 0.04;
         if (s.quality) p += 0.08;
-        if (s.quality === "high") p += s.assetProgress * 0.62 + (s.sceneReady ? 0.18 : 0);
-        else if (s.quality === "static") p += s.sceneReady ? 0.8 : 0.45;
+        if (!onHome) p += fontsReady ? 0.8 : 0.4;
+        else p += s.assetProgress * 0.62 + (s.sceneReady ? 0.18 : 0);
         return Math.min(1, Math.max(p, shown.p, Math.min(0.95, performance.now() / MAX_MS)));
       };
 

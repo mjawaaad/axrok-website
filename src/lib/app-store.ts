@@ -2,12 +2,12 @@ import { create } from "zustand";
 import type { Quality } from "./capability";
 
 type AppState = {
-  /** null until detected on the client. */
+  /** null until detected on the client. "high" gets the WebGL wolf story; "static" the light version. */
   quality: Quality | null;
   reducedMotion: boolean;
-  /** 0..1 progress of the 3D assets behind the loader. */
+  /** 0..1 progress of the Home story's assets behind the loader. */
   assetProgress: number;
-  /** True once the scene has rendered its first frame (or the static render has loaded). */
+  /** True once the Home story has its first frame (or its still) on screen. */
   sceneReady: boolean;
   /** True once the intro loader has finished (or was skipped this session). */
   introDone: boolean;

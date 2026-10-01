@@ -1,5 +1,6 @@
-// Decides whether this device gets the live WebGL scene or the static render.
-// Override for testing with ?quality=high or ?quality=static.
+// Decides whether this device gets the WebGL depth-parallax wolf story on Home ("high")
+// or the lighter image-based version ("static"). Phones, low-power devices, Save-Data and
+// software or missing WebGL get "static". Override for testing with ?quality=high|static.
 
 export type Quality = "high" | "static";
 

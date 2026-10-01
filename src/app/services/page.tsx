@@ -3,7 +3,6 @@ import { CtaLink } from "@/components/site/CtaLink";
 import { Corners } from "@/components/site/Corners";
 import { SplitHeading } from "@/components/motion/SplitHeading";
 import { RevealGroup } from "@/components/motion/Reveal";
-import { ScenePath, type SceneOffset } from "@/components/motion/ScenePath";
 import { services, tiers } from "@/content/site";
 import { cn } from "@/lib/utils";
 import { pageMeta } from "@/lib/metadata";
@@ -15,13 +14,6 @@ export const metadata: Metadata = pageMeta({
   path: "/services",
 });
 
-// The wolf stays quietly to the right; it recedes further while the tiers are read.
-const SERVICES_PATH: Record<string, SceneOffset> = {
-  intro: {},
-  catalog: { rotY: -0.2, dim: 0.15 },
-  tiers: { wolfZ: -2.2, wolfX: 0.08, rotY: -0.9, dim: 0.62 },
-  close: { wolfZ: -0.6, rotY: -0.35, dim: 0.2 },
-};
 
 export default function ServicesPage() {
   return (
@@ -156,8 +148,6 @@ export default function ServicesPage() {
           </RevealGroup>
         </div>
       </section>
-
-      <ScenePath path={SERVICES_PATH} />
     </>
   );
 }

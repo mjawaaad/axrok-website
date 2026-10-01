@@ -1,0 +1,25 @@
+{
+  "$comment": "[PLACEHOLDER: wolf photo] Source: iNaturalist photo 6367395, CC0 (public domain). Replace assets/wolf/source.jpg with the final photo, update the focal points below (fractions of width/height, origin top-left), then run `npm run prepare:wolf`. Read by scripts/prepare-wolf.mjs and the Home story shader.",
+  "placeholder": true,
+  "credit": "Gray wolf, iNaturalist observation photo 6367395 (CC0)",
+  "alt": "A grey wolf in near-darkness, head turned toward the viewer, its eyes catching cobalt light",
+  "source": { "width": 2048, "height": 1365 },
+  "focus": {
+    "wolf": [0.53, 0.47],
+    "head": [0.462, 0.395],
+    "eyes": [[0.4285, 0.399], [0.4695, 0.4007]]
+  },
+  "grade": {
+    "$comment": "Gradient map from luminance to the brand palette. Stops are [luminance 0..1, hex]. Shadows are crushed first so the scene reads as night.",
+    "shadowCrush": 0.18,
+    "highlightClip": 0.95,
+    "gamma": 1.7,
+    "stops": [
+      [0.0, "#020009"],
+      [0.32, "#0b0139"],
+      [0.6, "#1a2690"],
+      [0.82, "#3d55f0"],
+      [1.0, "#dfe5ff"]
+    ]
+  }
+}
