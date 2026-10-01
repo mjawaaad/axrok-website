@@ -32,26 +32,26 @@ npm run build && npm start
 
 | Script | What it does |
 | --- | --- |
-| `npm run prepare:wolf` | Builds every wolf asset from `assets/wolf/source.jpg` (see below). |
+| `npm run prepare:wolf` | Builds every wolf asset from `assets/wolf/frames/` (see below). |
 | `npm run gen:logo` | Re-cuts the logo into the loader's shards (`src/content/logo-shards.json`). |
 
 ## The wolf
 
-**The current photo is a placeholder** ([PLACEHOLDER: wolf photo]): a public-domain (CC0) grey wolf from iNaturalist, photo 6367395. To use the final photo:
+The story is a push-in through three frames of the same shot, each closer than the last: `assets/wolf/frames/wolf-1.png` to `wolf-3.png` (same size and aspect ratio). To change them:
 
-1. Replace `assets/wolf/source.jpg`. A dark, low-key photo with the head turned toward camera works best.
-2. Update the focal points in `src/content/wolf.json` (`wolf`, `head`, `eyes`, as fractions of width and height from the top-left) and the `alt` text.
-3. Run `npm run prepare:wolf`. Optionally place your own depth map at `assets/wolf/depth.png` (near = white); otherwise one is estimated locally with Depth Anything V2 on first run.
+1. Replace the frames. Keep the order wide to close.
+2. In `src/content/wolf.json`, set each frame's `eyes` and `anchor` (the midpoint between the eyes), as fractions of width and height from the top-left, and its `scale`: how much closer it is than the frame before (eye spacing in this frame ÷ eye spacing in the previous one). `gain` evens out brightness between frames. Update the `alt` text.
+3. Run `npm run prepare:wolf`. Depth maps are estimated locally with Depth Anything V2 on first run and cached as `assets/wolf/frames/depth-<n>.png` (delete them after changing a frame).
 
-The script writes the WebGL textures (`public/wolf/`), the pre-graded stills used on phones, interior pages and in reduced motion (`src/assets/wolf/`), and the Open Graph source (`assets/og/`). The navy-to-cobalt grade is defined once in `wolf.json` and applied identically by the script and the shader.
+The script writes the WebGL textures (`public/wolf/`), the pre-graded frames and head crop used on phones, interior pages and in reduced motion (`src/assets/wolf/`), and the Open Graph source (`assets/og/`). The navy-to-cobalt grade is defined once in `wolf.json` and applied identically by the script and the shader.
 
 **How the story works** (`src/components/home/`). One pinned stage, scrubbed by a GSAP ScrollTrigger timeline on Lenis-smoothed scroll, drives a shared `story` object:
 
-- **Capable desktops:** the photo is a dense WebGL plane displaced by its depth map (`WolfCanvas.tsx`). The camera dollies from a wide near-dark frame to the eyes, with a small orbit that settles head-on; the fragment shader grades, adds the cobalt rim light along depth edges, eye catchlights, grain and the fade into beat 4.
-- **Phones and low-power devices:** the pre-graded still moved with GPU transforms following the same values (`LiteVisual`).
-- **Reduced motion:** static stills and simple fade-ins, no pin (`StoryStatic`).
-- Beats: 1 distant and still in near-darkness, 2 closer, 3 head-on with light in the eyes, 4 the mark and tagline resolve out of cobalt light, then the CTA. Copy is in `WolfStory.tsx` (tagged `[PLACEHOLDER]`).
-- A true head turn needs video. To use a short clip instead, scrub `video.currentTime` from the same timeline in place of the WebGL plane; the beats, copy and grading layer stay as they are.
+- **The zoom** (`zoom.ts`): each frame is a layer aligned on the eyes and scaled by its cumulative `scale`, so all three line up exactly. As the zoom passes a frame's own scale, that frame fades in as a soft-edged window over the one before it, giving the next frame's detail without a cut. Zoom moves in log space at a constant speed (eased only at the start and end), so the push-in never seems to speed up or stall between frames.
+- **Capable desktops:** a full-screen WebGL pass (`WolfCanvas.tsx`) composites the frames in luminance, then grades, adds a slow depth-map parallax, the cobalt rim light along depth edges, eye catchlights, grain and the fade into beat 4.
+- **Phones and low-power devices:** the pre-graded frames as stacked images following the same `zoom.ts` maths with GPU transforms (`LiteVisual`).
+- **Reduced motion:** the wide and close frames as stills with simple fade-ins, no pin (`StoryStatic`).
+- Beats: 1 distant in the cave mouth, 2 closer, 3 face to face with light in the eyes, 4 the mark and tagline resolve out of cobalt light, then the CTA. Copy is in `WolfStory.tsx` (tagged `[PLACEHOLDER]`).
 
 Force a tier for testing with `?quality=high` or `?quality=static`.
 
@@ -83,7 +83,6 @@ Either push redeploys GitHub Pages automatically. To look at v1 locally without 
 
 Search the repo for `[PLACEHOLDER]`. Copy lives in `src/content/site.ts` and `src/components/home/WolfStory.tsx`. Items that make factual claims also show the tag on the page:
 
-- The wolf photo (see above)
 - Mission and vision statements (from the brand bible)
 - Each team member's certifications
 - Post-quantum partner name

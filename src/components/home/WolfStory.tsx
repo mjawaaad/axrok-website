@@ -10,11 +10,14 @@ import { RevealGroup } from "@/components/motion/Reveal";
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/lib/app-store";
 import { brand } from "@/content/site";
-import wolfFull from "@/assets/wolf/graded-full.webp";
-import wolfHead from "@/assets/wolf/graded-head.webp";
-import { EYES_MID, WOLF, story } from "./story-state";
+import frame1 from "@/assets/wolf/frame-1.webp";
+import frame2 from "@/assets/wolf/frame-2.webp";
+import frame3 from "@/assets/wolf/frame-3.webp";
+import { WOLF, story } from "./story-state";
+import { LZ_HOMES, frameAt } from "./zoom";
 
 const WolfCanvas = dynamic(() => import("./WolfCanvas"), { ssr: false });
+const GRADED_FRAMES = [frame1, frame2, frame3];
 
 // [PLACEHOLDER] story copy drafted for the brief's four beats; refine with the brand team.
 const BEATS = {
@@ -22,10 +25,6 @@ const BEATS = {
   two: { eyebrow: "Closer than you think", line: "Every gap you have not found brings it one step closer." },
   three: { eyebrow: "Readiness", line: "We hunt the way it hunts, so you see it first." },
 };
-
-// Top-left image coordinates for the light (image) version.
-const BODY_TL = [WOLF.body[0], 1 - WOLF.body[1]];
-const EYES_TL = [EYES_MID[0], 1 - EYES_MID[1]];
 
 function BeatCopy({ id, eyebrow, line, className = "" }: { id: string; eyebrow: string; line: string; className?: string }) {
   return (
@@ -42,39 +41,55 @@ function BeatCopy({ id, eyebrow, line, className = "" }: { id: string; eyebrow: 
   );
 }
 
+// Soft-edged window for a frame that is still smaller than the screen; --f is the feather.
+const FEATHER_MASK =
+  "linear-gradient(to right, transparent, #000 var(--f), #000 calc(100% - var(--f)), transparent), linear-gradient(to bottom, transparent, #000 var(--f), #000 calc(100% - var(--f)), transparent)";
+
 /**
- * Light version of the visual (phones, low-power devices, and the poster under the WebGL scene):
- * the pre-graded still, moved with transforms that follow the same story values.
+ * Image version of the push-in (phones, low-power devices, and the poster under the WebGL
+ * scene): the three pre-graded frames layered and moved by the same zoom maths as the shader.
  */
 function LiteVisual({ hidden }: { hidden: boolean }) {
-  const box = useRef<HTMLDivElement>(null);
+  const layers = useRef<(HTMLDivElement | null)[]>([]);
   const shade = useRef<HTMLDivElement>(null);
-  const glints = useRef<HTMLDivElement>(null);
+  const vignette = useRef<HTMLDivElement>(null);
+  const glints = useRef<(HTMLSpanElement | null)[]>([]);
   const set = useApp((s) => s.set);
 
   useEffect(() => {
     const apply = () => {
-      const el = box.current;
-      if (!el) return;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const bw = Math.max(vw, vh * WOLF.aspect);
-      const bh = bw / WOLF.aspect;
-      // Capped: the still is a single 2048px image, so it cannot take the WebGL scene's close-up.
-      const s = Math.min(1.9, Math.max(1, story.zoom));
-      const fx = BODY_TL[0] + (EYES_TL[0] - BODY_TL[0]) * story.focus;
-      const fy = BODY_TL[1] + (EYES_TL[1] - BODY_TL[1]) * story.focus;
-      const tx = Math.min(0, Math.max(vw - bw * s, vw / 2 - fx * bw * s));
-      const ty = Math.min(0, Math.max(vh - bh * s, vh / 2 - fy * bh * s));
-      el.style.width = `${bw}px`;
-      el.style.height = `${bh}px`;
-      el.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(${s})`;
-      if (shade.current) {
-        // Maps the shader's exposure range onto an overlay: beat 1 stays near-dark, beat 3 is fully lit.
-        const light = Math.min(1, Math.max(0, (story.exposure * story.reveal - 0.62) / 0.3));
-        shade.current.style.opacity = String(Math.min(1, 1 - light * 0.92 + story.fade));
+      const f = frameAt(story.lz, vw, vh);
+      f.layers.forEach((l, i) => {
+        const el = layers.current[i];
+        if (!el) return;
+        el.style.visibility = l.visible ? "visible" : "hidden";
+        if (!l.visible) return;
+        el.style.width = `${l.w}px`;
+        el.style.height = `${l.h}px`;
+        el.style.transform = `translate3d(${l.x}px, ${l.y}px, 0)`;
+        el.style.opacity = String(l.alpha);
+        const masked = l.feather > 0.001;
+        el.style.setProperty("--f", `${(l.feather * 100).toFixed(2)}%`);
+        el.style.maskImage = masked ? FEATHER_MASK : "none";
+        el.style.webkitMaskImage = masked ? FEATHER_MASK : "none";
+      });
+      if (vignette.current) {
+        vignette.current.style.background = `radial-gradient(circle at ${f.anchor[0]}px ${f.anchor[1]}px, transparent 18%, rgba(2,0,9,0.6) 75%)`;
       }
-      if (glints.current) glints.current.style.opacity = String(story.eyes * (1 - story.fade));
+      if (shade.current) {
+        // Maps the shader's exposure onto an overlay: beat 1 stays near-dark, beat 3 is fully lit.
+        const light = Math.min(1, Math.max(0, (story.exposure * story.reveal - 0.45) / 0.5));
+        shade.current.style.opacity = String(Math.min(1, 1 - light * 0.95 + story.fade));
+      }
+      const top = f.layers[2];
+      glints.current.forEach((g, i) => {
+        if (!g) return;
+        g.style.opacity = String(story.eyes * (1 - story.fade));
+        g.style.transform = `translate3d(${top.x + WOLF.eyes[i][0] * top.w}px, ${top.y + WOLF.eyes[i][1] * top.h}px, 0) translate(-50%, -50%)`;
+        g.style.width = g.style.height = `${Math.max(3, top.w * 0.005)}px`;
+      });
     };
     gsap.ticker.add(apply);
     return () => gsap.ticker.remove(apply);
@@ -82,26 +97,37 @@ function LiteVisual({ hidden }: { hidden: boolean }) {
 
   return (
     <div className={`absolute inset-0 overflow-hidden transition-opacity duration-1000 ${hidden ? "opacity-0" : "opacity-100"}`}>
-      <div ref={box} className="absolute top-0 left-0 origin-top-left will-change-transform">
-        <Image
-          src={wolfFull}
-          alt=""
-          fill
-          priority
-          sizes="(max-width: 768px) 200vw, 100vw"
-          onLoad={() => set({ assetProgress: 1, sceneReady: true })}
-          className="object-cover"
-        />
-        <div ref={glints} aria-hidden className="absolute inset-0 opacity-0">
-          {WOLF.eyes.map(([x, y], i) => (
-            <span
-              key={i}
-              className="absolute aspect-square w-[0.42%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#dfe5ff] shadow-[0_0_3px_1px_#5b70ff,0_0_12px_4px_rgba(30,58,255,0.45)]"
-              style={{ left: `${x * 100}%`, top: `${(1 - y) * 100}%` }}
-            />
-          ))}
+      {GRADED_FRAMES.map((src, i) => (
+        <div
+          key={i}
+          ref={(el) => {
+            layers.current[i] = el;
+          }}
+          className="absolute top-0 left-0 will-change-transform [mask-composite:intersect] [-webkit-mask-composite:source-in]"
+          style={{ visibility: i === 0 ? "visible" : "hidden" }}
+        >
+          <Image
+            src={src}
+            alt=""
+            fill
+            priority={i === 0}
+            sizes="(max-width: 768px) 220vw, 100vw"
+            onLoad={i === 0 ? () => set({ assetProgress: 1, sceneReady: true }) : undefined}
+            className="object-cover"
+          />
         </div>
-      </div>
+      ))}
+      {WOLF.eyes.map((_, i) => (
+        <span
+          key={i}
+          ref={(el) => {
+            glints.current[i] = el;
+          }}
+          aria-hidden
+          className="absolute top-0 left-0 rounded-full bg-[#dfe5ff] opacity-0 shadow-[0_0_3px_1px_#5b70ff,0_0_12px_4px_rgba(30,58,255,0.45)]"
+        />
+      ))}
+      <div ref={vignette} aria-hidden className="absolute inset-0" />
       <div ref={shade} aria-hidden className="absolute inset-0 bg-[#020009]" />
     </div>
   );
@@ -112,7 +138,7 @@ function StoryStatic() {
   return (
     <section aria-labelledby="hero-title">
       <div className="relative flex min-h-svh items-end overflow-hidden">
-        <Image src={wolfFull} alt={WOLF.alt} fill priority sizes="100vw" className="object-cover object-[60%_40%]" />
+        <Image src={frame1} alt={WOLF.alt} fill priority sizes="100vw" className="object-cover object-[70%_45%]" />
         <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#020009] via-[#020009]/60 to-[#020009]/20" />
         <RevealGroup immediate className="relative mx-auto w-full max-w-[1440px] px-5 pb-20 md:px-10">
           {[BEATS.one, BEATS.two].map((b) => (
@@ -125,7 +151,7 @@ function StoryStatic() {
       </div>
       <div className="relative grid min-h-[80svh] items-center overflow-hidden md:grid-cols-2">
         <div className="relative h-[60svh] md:h-full">
-          <Image src={wolfHead} alt="" fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
+          <Image src={frame3} alt="" fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover object-[55%_35%]" />
         </div>
         <RevealGroup className="px-5 py-16 md:px-12">
           <p data-reveal className="eyebrow">
@@ -200,7 +226,7 @@ function StoryPinned() {
         });
 
       // Opening state: distant, still, near-dark.
-      Object.assign(story, { zoom: 1, focus: 0, yaw: 0, exposure: 0.8, displace: 0.16, rim: 0.3, eyes: 0, fade: 0 });
+      Object.assign(story, { lz: 0, exposure: 0.95, parallax: 0.006, rim: 0.25, eyes: 0, fade: 0 });
       gsap.set(q("[data-beat]"), { autoAlpha: 0 });
       gsap.set(q("[data-beat='four']"), { autoAlpha: 1 });
       gsap.set(q("[data-four-item]"), { autoAlpha: 0, y: 24 });
@@ -222,8 +248,20 @@ function StoryPinned() {
 
       const tl = gsap.timeline({
         defaults: { ease: "none" },
-        scrollTrigger: { trigger: section.current, start: "top top", end: "+=420%", pin: stage.current, scrub: 1, anticipatePin: 1 },
+        scrollTrigger: { trigger: section.current, start: "top top", end: "+=460%", pin: stage.current, scrub: 1.2, anticipatePin: 1 },
       });
+
+      // The push-in: one continuous velocity curve in log-zoom, so it never jumps or stalls.
+      // Ease in from rest, hold a constant speed through all three frames, then decelerate. Each
+      // phase hands over at the same speed (quad ease covers half the distance a linear one would).
+      const V = 0.36; // log-zoom per timeline second
+      const ACCEL = 1;
+      const lzHome3 = LZ_HOMES[2];
+      const tHome3 = ACCEL + (lzHome3 - (V * ACCEL) / 2) / V;
+      const DRIFT = 0.22; // continues past the closest frame's framing while slowing to rest
+      tl.fromTo(story, { lz: 0 }, { lz: (V * ACCEL) / 2, duration: ACCEL, ease: "power1.in" }, 0);
+      tl.to(story, { lz: lzHome3, duration: tHome3 - ACCEL }, ACCEL);
+      tl.to(story, { lz: lzHome3 + DRIFT, duration: (2 * DRIFT) / V, ease: "power1.out" }, tHome3);
       const lineIn = (sel: string, at: number) => {
         tl.set(q(`[data-beat='${sel}']`), { autoAlpha: 1 }, at);
         tl.fromTo(q(`[data-beat='${sel}'] [data-beat-eyebrow]`), { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: "power3.out" }, at);
@@ -231,22 +269,23 @@ function StoryPinned() {
       };
       const lineOut = (sel: string, at: number) => tl.to(q(`[data-beat='${sel}']`), { autoAlpha: 0, y: -30, duration: 0.6, ease: "power2.in" }, at);
 
-      // 1. Distant and still in near-darkness (copy already on screen); a slow drift.
+      // 1. Distant and still in near-darkness (copy already on screen).
       tl.to(q("[data-cue]"), { autoAlpha: 0, duration: 0.4 }, 0);
-      tl.to(story, { zoom: 1.1, exposure: 0.84, rim: 0.35, duration: 2.2 }, 0);
+      tl.to(story, { exposure: 1.05, rim: 0.3, duration: 2.2, ease: "power1.inOut" }, 0);
       lineOut("one", 1.8);
-      // 2. The viewpoint moves closer.
-      tl.to(story, { zoom: 1.7, focus: 0.55, exposure: 0.92, yaw: 0.16, displace: 0.2, rim: 0.45, duration: 2.6, ease: "power1.inOut" }, 2.2);
+      // 2. The viewpoint moves closer (frame 2 settles into its own framing around here).
+      tl.to(story, { exposure: 1.2, rim: 0.45, duration: 2.4, ease: "power1.inOut" }, 2.2);
       lineIn("two", 2.6);
       lineOut("two", 4.5);
-      // 3. Head-on: the camera settles square to the face, cobalt rim light, eyes catch the light.
-      tl.to(story, { zoom: 2.5, focus: 1, yaw: 0, exposure: 0.92, rim: 1, displace: 0.22, duration: 2.2, ease: "power2.inOut" }, 4.8);
+      // 3. Head-on: the closest frame fills the screen, cobalt rim light, eyes catch the light.
+      tl.to(story, { exposure: 1.3, rim: 0.9, duration: 1.6, ease: "power1.inOut" }, 4.8);
       tl.to(story, { eyes: 1, duration: 0.9, ease: "power2.out" }, 6.1);
       lineIn("three", 5.6);
       lineOut("three", 7.3);
       // 4. The light in its eyes becomes the cobalt light the mark and tagline emerge from.
       tl.to(q("[data-glow]"), { autoAlpha: 1, scale: 1, duration: 1.4, ease: "power2.out" }, 7.5);
-      tl.to(story, { fade: 1, zoom: 2.9, duration: 1.6, ease: "power2.in" }, 7.6);
+      tl.to(story, { fade: 1, duration: 1.6, ease: "power2.in" }, 7.6);
+      tl.to(story, { lz: lzHome3 + DRIFT + 0.12, duration: 1.6, ease: "power2.in" }, 7.6);
       tl.to(q("[data-spot]"), { autoAlpha: 1, duration: 1.2 }, 8.1);
       tl.to(q("[data-four-mark]"), { autoAlpha: 1, scale: 1, filter: "blur(0px)", duration: 1.1, ease: "expo.out" }, 8.3);
       tl.to(words("[data-hero-title]"), { yPercent: 0, duration: 1, stagger: 0.05, ease: "expo.out" }, 8.7);
