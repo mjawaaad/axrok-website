@@ -3,7 +3,7 @@ import { ogContentType, ogSize, renderOg } from "@/lib/og";
 // Generated at build time; required for the static export used by GitHub Pages.
 export const dynamic = "force-static";
 
-export const alt = "About Axrok: the Amarok wolf mark beside the founder-led story.";
+export const alt = "About Axrok: a grey wolf in cobalt night light beside the founder-led story.";
 export const size = ogSize;
 export const contentType = ogContentType;
 

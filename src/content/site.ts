@@ -305,14 +305,14 @@ export const products = [
     key: "cti-platform",
     name: "Cyber Threat Intelligence platform",
     body: "Collects and correlates indicators, threat actor activity and exposure signals into a single view, so analysts start every investigation with context instead of raw feeds.",
-    powers: "Threat Intelligence and Investigations",
+    powers: "Threat intelligence",
     slug: "threat-intelligence-investigations",
   },
   {
     key: "brand-protection",
     name: "Brand Protection platform",
     body: "Watches for lookalike domains, impersonating accounts and fake apps that use your name, and tracks each case from first detection to takedown.",
-    powers: "Brand protection and impersonation monitoring",
+    powers: "Brand protection",
     slug: "threat-intelligence-investigations",
   },
   {
