@@ -7,7 +7,7 @@
 /*
   Axrok palette. Void navy and cobalt carry the brand; everything else is a tint of them.
   Contrast on --navy (#0B0139):
-    cobalt       #1E3AFF  2.9:1  fills, 3D, decoration only (fails AA for text and UI outlines)
+    cobalt       #1E3AFF  2.9:1  fills, the wolf grade, decoration only (fails AA for text and UI outlines)
     cobalt-lift  #5B70FF  4.8:1  outlines, focus rings, small accent marks
     periwinkle   #A3B1FF  9.4:1  accent text
     ink          #F4F5FF 18.6:1  body and headings
@@ -57,25 +57,6 @@
 
   --ease-expo-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-expo-in-out: cubic-bezier(0.87, 0, 0.13, 1);
-
-  --animate-marquee: marquee var(--duration) infinite linear;
-  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
-  @keyframes marquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(calc(-100% - var(--gap)));
-    }
-  }
-  @keyframes marquee-vertical {
-    from {
-      transform: translateY(0);
-    }
-    to {
-      transform: translateY(calc(-100% - var(--gap)));
-    }
-  }
 }
 
 /* The site is dark by design; shadcn tokens map straight onto the brand palette. */

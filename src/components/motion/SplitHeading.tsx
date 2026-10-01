@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, type ReactNode } from "react";
-import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
+import { gsap, SplitText, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/lib/app-store";
 
 type Props = {
@@ -73,6 +73,3 @@ export function SplitHeading({ as: Tag = "h2", children, className, trigger = "s
     </Tag>
   );
 }
-
-/** Refresh helper for layouts that change height after mount. */
-export const refreshScroll = () => ScrollTrigger.refresh();

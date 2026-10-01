@@ -1,7 +1,7 @@
 "use client";
 
 import { useProgress, useTexture } from "@react-three/drei";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useApp } from "@/lib/app-store";
@@ -82,20 +82,22 @@ const fragmentShader = /* glsl */ `
   }
 `;
 
+// Data textures: sampled as raw values, never colour-converted.
+const prepareTextures = (textures: THREE.Texture | THREE.Texture[]) => {
+  for (const t of Array.isArray(textures) ? textures : [textures]) {
+    t.colorSpace = THREE.NoColorSpace;
+    t.minFilter = THREE.LinearMipmapLinearFilter;
+    t.anisotropy = 4;
+    t.needsUpdate = true;
+  }
+};
+
 function WolfPlane({ hi, onReady }: { hi: boolean; onReady?: () => void }) {
-  const [luma, depth] = useTexture([WOLF_TEXTURES.luma(hi), WOLF_TEXTURES.depth]);
+  const [luma, depth] = useTexture([WOLF_TEXTURES.luma(hi), WOLF_TEXTURES.depth], prepareTextures);
   const set = useApp((s) => s.set);
-  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
-  const size = useThree((s) => s.size);
-  const drift = useRef({ x: 0, y: 0 });
+  const mesh = useRef<THREE.Mesh>(null);
 
   const material = useMemo(() => {
-    for (const t of [luma, depth]) {
-      t.colorSpace = THREE.NoColorSpace;
-      t.minFilter = THREE.LinearMipmapLinearFilter;
-      t.anisotropy = 4;
-      t.needsUpdate = true;
-    }
     return new THREE.ShaderMaterial({
       vertexShader,
       fragmentShader,
@@ -140,9 +142,10 @@ function WolfPlane({ hi, onReady }: { hi: boolean; onReady?: () => void }) {
     };
   }, [set, onReady]);
 
-  useFrame((state, dt) => {
-    const u = material.uniforms;
-    const t = state.clock.elapsedTime;
+  useFrame(({ camera, clock, size }) => {
+    if (!mesh.current) return;
+    const u = (mesh.current.material as THREE.ShaderMaterial).uniforms;
+    const t = clock.elapsedTime;
     u.uTime.value = t % 100;
     u.uExposure.value = story.exposure * story.reveal;
     u.uDisplace.value = story.displace;
@@ -165,18 +168,17 @@ function WolfPlane({ hi, onReady }: { hi: boolean; onReady?: () => void }) {
     const mx = Math.max(0, PLANE_W / 2 - visW / 2);
     const my = Math.max(0, PLANE_H / 2 - visH / 2);
     // A slow idle drift keeps the parallax alive between scrolls.
-    drift.current.x = Math.sin(t * 0.21) * 0.012 * story.zoom;
-    drift.current.y = Math.cos(t * 0.17) * 0.008 * story.zoom;
-    const tx = THREE.MathUtils.clamp((fx - 0.5) * PLANE_W + drift.current.x, -mx, mx);
-    const ty = THREE.MathUtils.clamp((fy - 0.5) * PLANE_H + drift.current.y, -my, my);
+    const driftX = Math.sin(t * 0.21) * 0.012 * story.zoom;
+    const driftY = Math.cos(t * 0.17) * 0.008 * story.zoom;
+    const tx = THREE.MathUtils.clamp((fx - 0.5) * PLANE_W + driftX, -mx, mx);
+    const ty = THREE.MathUtils.clamp((fy - 0.5) * PLANE_H + driftY, -my, my);
 
     camera.position.set(tx + Math.sin(story.yaw) * dist, ty, Math.cos(story.yaw) * dist + story.displace * 0.5);
     camera.lookAt(tx, ty, story.displace * 0.5);
-    void dt;
   });
 
   return (
-    <mesh material={material}>
+    <mesh ref={mesh} material={material}>
       <planeGeometry args={[PLANE_W, PLANE_H, 320, Math.round(320 / WOLF.aspect)]} />
     </mesh>
   );

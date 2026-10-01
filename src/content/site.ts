@@ -344,9 +344,6 @@ export const differentiators = [
   },
 ];
 
-// [PLACEHOLDER] industries list, confirm before launch
-export const industries = ["Financial services", "SaaS", "Healthcare", "E-commerce", "Web3", "Logistics", "Space", "Media"];
-
 // Names and roles are from the brief.
 export const team = [
   { name: "Zayan Abbas", role: "Managing Director", initials: "ZA", certifications: "[PLACEHOLDER] certifications" },
