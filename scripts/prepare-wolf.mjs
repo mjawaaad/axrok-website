@@ -57,7 +57,8 @@ const far = await sharp(luma, { raw: { width: W, height: H, channels: 1 } }).blu
 const dof = Buffer.alloc(W * H);
 for (let i = 0; i < W * H; i++) {
   const d = depth[i] / 255;
-  const sharpness = Math.min(1, Math.max(0, (d - 0.42) / 0.22)); // near objects stay sharp
+  // Depth Anything puts this wolf around 0.5; only the far background (below ~0.3) softens.
+  const sharpness = Math.min(1, Math.max(0, (d - 0.24) / 0.16));
   dof[i] = Math.round(far[i] + (luma[i] - far[i]) * sharpness);
 }
 const dofImg = () => sharp(dof, { raw: { width: W, height: H, channels: 1 } });

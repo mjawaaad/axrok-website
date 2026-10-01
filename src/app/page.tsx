@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { WolfStory } from "@/components/home/WolfStory";
+import { ServicesTeaser, WhyTeaser } from "@/components/home/HomeSections";
 import { brand } from "@/content/site";
 import { pageMeta } from "@/lib/metadata";
 
@@ -8,11 +10,13 @@ export const metadata: Metadata = pageMeta({
   path: "/",
 });
 
-// Stage 1 stub: the wolf story is built in stage 5.
+/** The story is the point; the rest of Home stays light. */
 export default function Home() {
   return (
-    <section className="flex min-h-dvh items-end px-10 pb-24">
-      <h1 className="display text-6xl">{brand.tagline}</h1>
-    </section>
+    <>
+      <WolfStory />
+      <ServicesTeaser />
+      <WhyTeaser />
+    </>
   );
 }
